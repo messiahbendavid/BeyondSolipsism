@@ -1,0 +1,14 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Jan 22 19:57:25 2026
+
+@author: brcum
+"""
+
+dash
+dash-bootstrap-components
+pandas
+numpy
+websocket-client
+requests
+gunicorn
