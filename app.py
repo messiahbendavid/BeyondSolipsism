@@ -1,28 +1,17 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed Jan  7 14:55:19 2026
-
-@author: brcum
-"""
-
-# -*- coding: utf-8 -*-
-"""
 Beyond Price and Time
 Copyright © 2026 Truth Communications LLC. All Rights Reserved.
 
 Top 1000 stocks with historical backfill for immediate trading signals
 True R:R based on price position within stasis bands
-Explicit Take Profit and Stop Loss levels
+TWO MERIT SCORES: 
+  - Stasis Merit Score (SMS): Based on stasis patterns
+  - Fundamental Merit Score (FMS): Based on fundamental growth SLOPES
 
 Requirements:
-    pip install dash dash-bootstrap-components pandas numpy websocket-client requests
+    pip install dash dash-bootstrap-components pandas numpy websocket-client requests scipy
 
-Setup:
-    1. Create an 'assets' folder in the same directory as this script
-    2. Save your logo as 'logo.png' in the assets folder
-
-Usage:
-    python beyond_price_and_time.py
 """
 
 import time
@@ -65,111 +54,27 @@ class Config:
         'MU', 'LRCX', 'ADI', 'KLAC', 'SNPS', 'CDNS', 'MRVL', 'FTNT', 'PANW', 'CRWD',
         'ZS', 'DDOG', 'SNOW', 'PLTR', 'NET', 'MDB', 'TEAM', 'WDAY', 'OKTA', 'HUBS',
         'ZM', 'DOCU', 'SQ', 'PYPL', 'SHOP', 'MELI', 'SE', 'UBER', 'LYFT', 'DASH',
-        # Tech continued (51-100)
-        'ABNB', 'COIN', 'HOOD', 'RBLX', 'U', 'TTWO', 'EA', 'ATVI', 'NFLX', 'ROKU',
-        'SPOT', 'TTD', 'PINS', 'SNAP', 'TWTR', 'MTCH', 'BMBL', 'ZG', 'RDFN', 'OPEN',
-        'CVNA', 'CPNG', 'GRAB', 'BEKE', 'JD', 'BABA', 'PDD', 'BIDU', 'NIO', 'XPEV',
-        'LI', 'RIVN', 'LCID', 'FSR', 'GOEV', 'ARVL', 'REE', 'HYLN', 'NKLA', 'RIDE',
-        'WKHS', 'SOLO', 'KNDI', 'BLNK', 'CHPT', 'EVGO', 'DCFC', 'VLTA', 'PTRA', 'LEV',
-        # Finance (101-200)
-        'BRK.B', 'JPM', 'V', 'MA', 'BAC', 'WFC', 'GS', 'MS', 'C', 'AXP',
-        'BLK', 'SCHW', 'SPGI', 'CME', 'ICE', 'CB', 'PGR', 'MMC', 'AON', 'TRV',
-        'MET', 'PRU', 'AIG', 'ALL', 'AFL', 'HIG', 'MTB', 'FITB', 'RF', 'CFG',
-        'KEY', 'HBAN', 'ZION', 'CMA', 'USB', 'PNC', 'TFC', 'ALLY', 'COF', 'DFS',
-        'SYF', 'NTRS', 'STT', 'BK', 'TROW', 'IVZ', 'BEN', 'AMG', 'SEIC', 'MKTX',
-        'CBOE', 'NDAQ', 'MSCI', 'FDS', 'MCO', 'INFO', 'BR', 'WEX', 'GPN', 'FIS',
-        'FISV', 'ADP', 'PAYX', 'PAYC', 'PCTY', 'HQY', 'WU', 'MGI', 'EEFT', 'IMXI',
-        'PAYO', 'RPAY', 'FOUR', 'TOST', 'BILL', 'AFRM', 'UPST', 'LC', 'SOFI', 'NU',
-        'PSFE', 'PAGS', 'STNE', 'XP', 'VTEX', 'DOCN', 'TWLO', 'BAND', 'LMND', 'ROOT',
-        'OSCR', 'CLOV', 'HIMS', 'TDOC', 'AMWL', 'TALK', 'CERT', 'GDRX', 'NTRA', 'GH',
-        # Healthcare (201-350)
+        # Finance
+        'JPM', 'V', 'MA', 'BAC', 'WFC', 'GS', 'MS', 'C', 'AXP', 'BLK',
+        'SCHW', 'SPGI', 'CME', 'ICE', 'CB', 'PGR', 'MMC', 'AON', 'TRV', 'MET',
+        'COF', 'DFS', 'SYF', 'ALLY', 'SOFI', 'AFRM', 'UPST', 'HOOD', 'COIN',
+        # Healthcare
         'UNH', 'JNJ', 'LLY', 'PFE', 'ABBV', 'MRK', 'TMO', 'ABT', 'DHR', 'BMY',
-        'AMGN', 'GILD', 'VRTX', 'REGN', 'ISRG', 'MDT', 'SYK', 'BSX', 'ELV', 'CI',
-        'HUM', 'CNC', 'MCK', 'CAH', 'CVS', 'WBA', 'ZTS', 'IDXX', 'DXCM', 'IQV',
-        'MTD', 'A', 'WAT', 'BIO', 'HOLX', 'ALGN', 'PODD', 'MRNA', 'BIIB', 'ILMN',
-        'ALNY', 'BMRN', 'INCY', 'MEDP', 'CRL', 'PKI', 'DGX', 'LH', 'HCA', 'THC',
-        'UHS', 'CYH', 'SEM', 'ACHC', 'ADUS', 'AMED', 'ENSG', 'NHC', 'PNTG', 'CCRN',
-        'AMN', 'HCSG', 'EHC', 'SGRY', 'USPH', 'OPCH', 'ALHC', 'BKD', 'NHI', 'OHI',
-        'SBRA', 'HR', 'DHC', 'PEAK', 'VTR', 'WELL', 'LTC', 'CTRE', 'GMRE', 'MPW',
-        'AGNC', 'NLY', 'STWD', 'BXMT', 'LADR', 'KREF', 'TRTX', 'GPMT', 'RC', 'TWO',
-        'ARR', 'ORC', 'IVR', 'NYMT', 'MFA', 'PMT', 'MITT', 'WMC', 'ANH', 'CMO',
-        'CHMI', 'EARN', 'DX', 'NRZ', 'RITM', 'ACRE', 'ARI', 'CIGI', 'JLL', 'CBRE',
-        'CWK', 'NMRK', 'MMI', 'DOUG', 'RMAX', 'EXPI', 'COMP', 'RDFN', 'OPEN', 'OPAD',
-        'FTHM', 'REAL', 'HOUS', 'TRUP', 'PETS', 'WOOF', 'CHWY', 'BARK', 'FRPT', 'PET',
-        'ELAN', 'ZTS', 'IDXX', 'NVST', 'PDCO', 'HSIC', 'XRAY', 'ALGN', 'NVST', 'APEN',
-        'SDC', 'ALGM', 'GMED', 'NUVA', 'OFIX', 'KIDS', 'OMI', 'LMAT', 'ATRC', 'IRTC',
-        # Consumer Discretionary (351-500)
-        'HD', 'LOW', 'TJX', 'NKE', 'SBUX', 'MCD', 'CMG', 'YUM', 'DPZ', 'QSR',
-        'BKNG', 'MAR', 'HLT', 'H', 'WH', 'RCL', 'CCL', 'NCLH', 'LVS', 'WYNN',
-        'MGM', 'CZR', 'PENN', 'DKNG', 'RSI', 'GENI', 'SKLZ', 'DMYT', 'SGHC', 'BALY',
-        'RRR', 'MCRI', 'PLYA', 'TNL', 'VAC', 'IHG', 'CHH', 'STAY', 'APTS', 'SVC',
-        'PK', 'RLJ', 'SHO', 'DRH', 'XHR', 'INN', 'APLE', 'CLDT', 'HT', 'AHT',
-        'DRI', 'EAT', 'WING', 'TXRH', 'BLMN', 'CAKE', 'CHUY', 'TACO', 'JACK', 'DENN',
-        'ARCO', 'LOCO', 'BROS', 'SBUX', 'DNKN', 'JAB', 'QSR', 'WEN', 'ARMK', 'CMPGY',
-        'TGT', 'COST', 'WMT', 'DG', 'DLTR', 'BIG', 'OLLI', 'FIVE', 'PSMT', 'IMKTA',
-        'ROST', 'BURL', 'GPS', 'ANF', 'AEO', 'URBN', 'EXPR', 'TLYS', 'ZUMZ', 'BOOT',
-        'GES', 'GIII', 'PVH', 'RL', 'TPR', 'VFC', 'LEVI', 'HBI', 'HAFC', 'GIII',
-        'LULU', 'NKE', 'UAA', 'UA', 'SKX', 'SHOO', 'CAL', 'SCVL', 'HIBB', 'BGFV',
-        'DKS', 'ASO', 'SPWH', 'VSTO', 'SWBI', 'RGR', 'AMMO', 'POWW', 'CLSK', 'AOUT',
-        'GRMN', 'GPRO', 'SONO', 'KOSS', 'VOXX', 'HEAR', 'LOGI', 'CRSR', 'HEAR', 'JBL',
-        'POOL', 'TSCO', 'ORLY', 'AZO', 'AAP', 'GPC', 'BBY', 'GME', 'BBBY', 'W',
-        'ETSY', 'EBAY', 'CPRT', 'KMX', 'CVNA', 'VRM', 'LOTZ', 'SFT', 'CARG', 'CARS',
-        # Consumer Staples (501-600)
-        'PG', 'KO', 'PEP', 'PM', 'MO', 'STZ', 'TAP', 'BUD', 'DEO', 'BF.B',
-        'MNST', 'KDP', 'CELH', 'FIZZ', 'COKE', 'NBEV', 'REED', 'PRMW', 'WTER', 'TBEV',
-        'KHC', 'GIS', 'K', 'CAG', 'CPB', 'SJM', 'HRL', 'TSN', 'HSY', 'MDLZ',
-        'CL', 'EL', 'CHD', 'CLX', 'KMB', 'SPB', 'HNST', 'BRBR', 'PRPL', 'CSPR',
-        'KR', 'SYY', 'USFD', 'PFGC', 'CHEF', 'UNFI', 'SPTN', 'ANDE', 'BGS', 'SMPL',
-        'HAIN', 'BYND', 'TTCF', 'APPH', 'VITL', 'FRPT', 'NOMD', 'STKL', 'OTLY', 'COCO',
-        'LANC', 'JJSF', 'SENEA', 'SENEB', 'LNDC', 'FARM', 'CALM', 'JBSS', 'BRFS', 'PPC',
-        'SAFM', 'INGR', 'DAR', 'THS', 'FLO', 'IPAR', 'CENT', 'CENTA', 'ACCO', 'SWM',
-        'ATR', 'SON', 'SEE', 'PKG', 'IP', 'WRK', 'GPK', 'GEF', 'BERY', 'AMCR',
-        'AVY', 'SLGN', 'BLL', 'CCK', 'BALL', 'OI', 'ARD', 'TROX', 'CC', 'HUN',
-        # Energy (601-700)
-        'XOM', 'CVX', 'COP', 'SLB', 'EOG', 'PSX', 'VLO', 'MPC', 'OXY', 'HAL',
-        'PXD', 'DVN', 'FANG', 'HES', 'APA', 'MRO', 'CTRA', 'EQT', 'AR', 'SWN',
-        'RRC', 'CNX', 'COG', 'MTDR', 'PDCE', 'SM', 'WLL', 'OAS', 'CPE', 'CRK',
-        'TELL', 'RIG', 'VAL', 'NE', 'DO', 'HP', 'PTEN', 'NBR', 'DRQ', 'LBRT',
-        'PUMP', 'OIS', 'WHD', 'AROC', 'USAC', 'TRGP', 'WES', 'AM', 'HESM', 'SMLP',
-        'CEQP', 'GLP', 'HEP', 'CAPL', 'DKL', 'MPLX', 'PAA', 'PAGP', 'NS', 'NGL',
-        'GEL', 'SUN', 'USDP', 'SPH', 'SHLX', 'BPMP', 'ETRN', 'DCP', 'ENLC', 'NBLX',
-        'KMI', 'WMB', 'OKE', 'ET', 'EPD', 'ENB', 'TRP', 'BKR', 'FTI', 'NOV',
-        'CHX', 'HLX', 'OII', 'SDRL', 'TDW', 'GEOS', 'CLB', 'LIQT', 'NR', 'EFXT',
-        'HCC', 'ARCH', 'AMR', 'ARLP', 'CEIX', 'BTU', 'METC', 'NC', 'SXC', 'HCC',
-        # Industrials (701-850)
+        'AMGN', 'GILD', 'VRTX', 'REGN', 'ISRG', 'MDT', 'SYK', 'BSX', 'MRNA', 'BIIB',
+        # Consumer
+        'HD', 'LOW', 'TJX', 'NKE', 'SBUX', 'MCD', 'CMG', 'YUM', 'DPZ', 'COST',
+        'WMT', 'TGT', 'AMZN', 'BKNG', 'MAR', 'HLT', 'ABNB', 'DIS', 'NFLX',
+        # Industrial
         'CAT', 'DE', 'UNP', 'HON', 'GE', 'RTX', 'BA', 'LMT', 'NOC', 'GD',
-        'TDG', 'HWM', 'TXT', 'LHX', 'LDOS', 'SAIC', 'BAH', 'CACI', 'KTOS', 'MRCY',
-        'MMM', 'ITW', 'EMR', 'ROK', 'ETN', 'PH', 'DOV', 'AME', 'NDSN', 'KEYS',
-        'ZBRA', 'TER', 'TRMB', 'JKHY', 'ANSS', 'PTC', 'MANH', 'GWRE', 'SSNC', 'VRSK',
-        'FDX', 'UPS', 'CHRW', 'EXPD', 'XPO', 'JBHT', 'ODFL', 'SAIA', 'WERN', 'KNX',
-        'SNDR', 'HTLD', 'ARCB', 'MRTN', 'YELL', 'HUBG', 'ECHO', 'RLGT', 'GXO', 'FWRD',
-        'DAL', 'UAL', 'AAL', 'LUV', 'ALK', 'JBLU', 'SAVE', 'MESA', 'SKYW', 'ALGT',
-        'HA', 'RYAAY', 'CPA', 'VLRS', 'GOL', 'AZUL', 'ERJ', 'TGI', 'SNCY', 'ATSG',
-        'NSC', 'CSX', 'UNP', 'CP', 'CNI', 'WAB', 'GWW', 'FAST', 'WSO', 'AIT',
-        'MSM', 'SITE', 'POOL', 'WCC', 'CNM', 'FERG', 'WSO', 'GMS', 'BLDR', 'BLD',
-        'IBP', 'MHK', 'TREX', 'DOOR', 'TILE', 'SSD', 'AWI', 'FRTA', 'APOG', 'NX',
-        'VMC', 'MLM', 'SUM', 'EXP', 'ITE', 'USLM', 'IIIN', 'ROCK', 'CRON', 'SMID',
-        'TEX', 'AGCO', 'CNHI', 'ALG', 'PCAR', 'CMI', 'OSK', 'NAV', 'SHYF', 'WNC',
-        'ALSN', 'BC', 'MOD', 'HAYW', 'REVG', 'FSS', 'TTC', 'HY', 'ASTE', 'GTX',
-        'DY', 'MTRN', 'ATKR', 'NVT', 'POWL', 'ENS', 'AEIS', 'VICR', 'BELFB', 'BELFA',
-        # Materials (851-900)
-        'LIN', 'APD', 'ECL', 'SHW', 'PPG', 'DD', 'DOW', 'LYB', 'EMN', 'CE',
-        'ALB', 'FMC', 'CF', 'MOS', 'NTR', 'IFF', 'CTVA', 'RPM', 'AXTA', 'AZEK',
-        'NUE', 'STLD', 'CLF', 'X', 'RS', 'CMC', 'ZEUS', 'SCHN', 'CRS', 'HAYN',
-        'ATI', 'KALU', 'CENX', 'AA', 'ARNC', 'CSTM', 'HXL', 'KRA', 'CMP', 'TKR',
-        'FCX', 'SCCO', 'TECK', 'VALE', 'RIO', 'BHP', 'NEM', 'GOLD', 'AEM', 'FNV',
-        # Real Estate (901-950)
-        'AMT', 'PLD', 'CCI', 'EQIX', 'PSA', 'SPG', 'O', 'WELL', 'DLR', 'AVB',
-        'EQR', 'VTR', 'ARE', 'MAA', 'UDR', 'ESS', 'INVH', 'SUI', 'ELS', 'HST',
-        'PK', 'RLJ', 'SHO', 'DRH', 'XHR', 'INN', 'APLE', 'CLDT', 'HT', 'AHT',
-        'IRM', 'CUBE', 'EXR', 'REXR', 'STAG', 'COLD', 'IIPR', 'VICI', 'GLPI', 'STOR',
-        'NNN', 'EPRT', 'ADC', 'FCPT', 'GTY', 'PINE', 'SAFE', 'LAND', 'ILPT', 'OPI',
-        # Utilities (951-1000)
-        'NEE', 'DUK', 'SO', 'D', 'AEP', 'EXC', 'SRE', 'XEL', 'ED', 'PEG',
-        'WEC', 'ES', 'AWK', 'DTE', 'ETR', 'FE', 'PPL', 'CMS', 'AES', 'AEE',
-        'CNP', 'NI', 'PNW', 'NRG', 'VST', 'PCG', 'EIX', 'OGE', 'ALE', 'POR',
-        'IDA', 'BKH', 'NWE', 'AVA', 'SJI', 'NJR', 'OGS', 'SR', 'UTL', 'MGEE',
-        'T', 'VZ', 'TMUS', 'CMCSA', 'DIS', 'CHTR', 'PARA', 'WBD', 'FOX', 'FOXA',
+        'MMM', 'ITW', 'EMR', 'FDX', 'UPS',
+        # Energy
+        'XOM', 'CVX', 'COP', 'SLB', 'EOG', 'PSX', 'VLO', 'MPC', 'OXY', 'HAL',
+        # Materials
+        'LIN', 'APD', 'ECL', 'SHW', 'NUE', 'FCX', 'NEM',
+        # Utilities/REITs
+        'NEE', 'DUK', 'SO', 'AMT', 'PLD', 'CCI', 'EQIX', 'PSA', 'SPG', 'O',
+        # Communication
+        'T', 'VZ', 'TMUS', 'CMCSA', 'CHTR',
     ])
     
     thresholds: List[float] = field(default_factory=lambda: [
@@ -188,10 +93,14 @@ class Config:
     volumes: Dict[str, float] = field(default_factory=dict)
     week52_data: Dict[str, Dict] = field(default_factory=dict)
     
+    # Fundamental data storage
+    fundamental_data: Dict[str, Dict] = field(default_factory=dict)
+    fundamental_slopes: Dict[str, Dict] = field(default_factory=dict)
+    
     min_tradable_stasis: int = 3
 
 config = Config()
-config.symbols = list(dict.fromkeys(config.symbols))  # Remove duplicates
+config.symbols = list(dict.fromkeys(config.symbols))
 
 # ============================================================================
 # ENUMS
@@ -206,6 +115,605 @@ class SignalStrength(Enum):
     MODERATE = "MODERATE"
     STRONG = "STRONG"
     VERY_STRONG = "VERY_STRONG"
+
+# ============================================================================
+# FUNDAMENTAL DATA FETCHER (POLYGON FINANCIALS API)
+# ============================================================================
+
+def fetch_fundamental_data_polygon(symbol: str) -> Optional[Dict]:
+    """
+    Fetch quarterly financial data from Polygon's Financials API.
+    Returns dict with lists of quarterly values for each metric.
+    """
+    try:
+        url = (
+            f"{config.polygon_rest_url}/vX/reference/financials"
+            f"?ticker={symbol}&timeframe=quarterly&limit=24&sort=filing_date"
+            f"&order=desc&apiKey={config.polygon_api_key}"
+        )
+        
+        response = requests.get(url, timeout=30)
+        
+        if response.status_code != 200:
+            return None
+        
+        data = response.json()
+        results = data.get('results', [])
+        
+        if not results:
+            return None
+        
+        # Initialize lists for each metric
+        fundamentals = {
+            'dates': [],
+            'revenue': [],
+            'net_income': [],
+            'operating_cash_flow': [],
+            'capex': [],
+            'fcf': [],
+            'total_assets': [],
+            'total_liabilities': [],
+            'shareholders_equity': [],
+            'current_assets': [],
+            'current_liabilities': [],
+            'total_debt': [],
+            'eps': [],
+        }
+        
+        for result in results:
+            try:
+                financials = result.get('financials', {})
+                
+                # Income Statement
+                income = financials.get('income_statement', {})
+                revenue = income.get('revenues', {}).get('value', 0) or 0
+                net_income = income.get('net_income_loss', {}).get('value', 0) or 0
+                eps = income.get('basic_earnings_per_share', {}).get('value', 0) or 0
+                
+                # Cash Flow Statement
+                cash_flow = financials.get('cash_flow_statement', {})
+                operating_cf = cash_flow.get('net_cash_flow_from_operating_activities', {}).get('value', 0) or 0
+                # CapEx is usually negative, so we take absolute value
+                capex_raw = cash_flow.get('net_cash_flow_from_investing_activities', {}).get('value', 0) or 0
+                
+                # Balance Sheet
+                balance = financials.get('balance_sheet', {})
+                total_assets = balance.get('assets', {}).get('value', 0) or 0
+                total_liabilities = balance.get('liabilities', {}).get('value', 0) or 0
+                equity = balance.get('equity', {}).get('value', 0) or 0
+                current_assets = balance.get('current_assets', {}).get('value', 0) or 0
+                current_liabilities = balance.get('current_liabilities', {}).get('value', 0) or 0
+                
+                # Calculate FCF (Operating Cash Flow - CapEx)
+                # Note: capex from investing activities is usually negative
+                fcf = operating_cf + capex_raw  # Adding because capex is negative
+                
+                # Get debt
+                total_debt = balance.get('long_term_debt', {}).get('value', 0) or 0
+                short_term_debt = balance.get('short_term_debt', {}).get('value', 0) or 0
+                total_debt += short_term_debt
+                
+                # Append to lists
+                fundamentals['dates'].append(result.get('filing_date', ''))
+                fundamentals['revenue'].append(revenue)
+                fundamentals['net_income'].append(net_income)
+                fundamentals['operating_cash_flow'].append(operating_cf)
+                fundamentals['capex'].append(abs(capex_raw))
+                fundamentals['fcf'].append(fcf)
+                fundamentals['total_assets'].append(total_assets)
+                fundamentals['total_liabilities'].append(total_liabilities)
+                fundamentals['shareholders_equity'].append(equity)
+                fundamentals['current_assets'].append(current_assets)
+                fundamentals['current_liabilities'].append(current_liabilities)
+                fundamentals['total_debt'].append(total_debt)
+                fundamentals['eps'].append(eps)
+                
+            except Exception as e:
+                continue
+        
+        # Reverse to chronological order (oldest first)
+        for key in fundamentals:
+            fundamentals[key] = fundamentals[key][::-1]
+        
+        return fundamentals
+        
+    except Exception as e:
+        print(f"Error fetching fundamentals for {symbol}: {e}")
+        return None
+
+
+def calculate_financial_ratios(fundamentals: Dict, current_price: float, market_cap: float) -> Dict:
+    """
+    Calculate financial ratios from raw fundamental data.
+    """
+    ratios = {
+        'pe_ratio': [],
+        'current_ratio': [],
+        'roe': [],
+        'roa': [],
+        'net_profit_margin': [],
+        'debt_to_equity': [],
+        'price_to_book': [],
+        'price_to_sales': [],
+        'asset_turnover': [],
+        'fcfy': [],
+    }
+    
+    n = len(fundamentals.get('revenue', []))
+    
+    for i in range(n):
+        try:
+            revenue = fundamentals['revenue'][i]
+            net_income = fundamentals['net_income'][i]
+            total_assets = fundamentals['total_assets'][i]
+            equity = fundamentals['shareholders_equity'][i]
+            current_assets = fundamentals['current_assets'][i]
+            current_liabilities = fundamentals['current_liabilities'][i]
+            total_debt = fundamentals['total_debt'][i]
+            eps = fundamentals['eps'][i]
+            fcf = fundamentals['fcf'][i]
+            
+            # P/E Ratio
+            pe = current_price / eps if eps and eps > 0 else None
+            ratios['pe_ratio'].append(pe)
+            
+            # Current Ratio
+            cr = current_assets / current_liabilities if current_liabilities else None
+            ratios['current_ratio'].append(cr)
+            
+            # ROE
+            roe = net_income / equity if equity and equity > 0 else None
+            ratios['roe'].append(roe)
+            
+            # ROA
+            roa = net_income / total_assets if total_assets else None
+            ratios['roa'].append(roa)
+            
+            # Net Profit Margin
+            npm = net_income / revenue if revenue else None
+            ratios['net_profit_margin'].append(npm)
+            
+            # Debt to Equity
+            de = total_debt / equity if equity and equity > 0 else None
+            ratios['debt_to_equity'].append(de)
+            
+            # Price to Book (using most recent price for all)
+            book_value_per_share = equity / (market_cap / current_price) if current_price and market_cap else None
+            pb = current_price / book_value_per_share if book_value_per_share and book_value_per_share > 0 else None
+            ratios['price_to_book'].append(pb)
+            
+            # Price to Sales (annualized)
+            annual_revenue = revenue * 4  # Quarterly to annual
+            ps = market_cap / annual_revenue if annual_revenue else None
+            ratios['price_to_sales'].append(ps)
+            
+            # Asset Turnover
+            at = revenue / total_assets if total_assets else None
+            ratios['asset_turnover'].append(at)
+            
+            # FCFY (using trailing 4 quarters)
+            if i >= 3:
+                annual_fcf = sum(fundamentals['fcf'][max(0, i-3):i+1])
+                fcfy = annual_fcf / market_cap if market_cap else None
+            else:
+                fcfy = None
+            ratios['fcfy'].append(fcfy)
+            
+        except Exception as e:
+            for key in ratios:
+                ratios[key].append(None)
+    
+    return ratios
+
+
+def calculate_slopes(series: List, span_short: int = 4, span_long: int = 20) -> Tuple[Optional[float], Optional[float]]:
+    """
+    Calculate EMA-based slopes for 5-quarter and 20-quarter periods.
+    Returns (slope_5, slope_20)
+    """
+    if not series or len(series) < 5:
+        return None, None
+    
+    # Convert to pandas series, handling None values
+    s = pd.Series(series)
+    s = s.replace([np.inf, -np.inf], np.nan)
+    
+    # 5-Quarter slope (using span=4)
+    slope_5 = None
+    if len(s.dropna()) >= 5:
+        try:
+            ema_short = s.ewm(span=span_short, adjust=False).mean()
+            if len(ema_short) >= 5 and pd.notna(ema_short.iloc[-1]) and pd.notna(ema_short.iloc[-5]):
+                if abs(ema_short.iloc[-5]) > 0.0001:
+                    slope_5 = (ema_short.iloc[-1] - ema_short.iloc[-5]) / abs(ema_short.iloc[-5])
+        except:
+            pass
+    
+    # 20-Quarter slope
+    slope_20 = None
+    if len(s.dropna()) >= 21:
+        try:
+            ema_long = s.ewm(span=span_long, adjust=False).mean()
+            if len(ema_long) >= 21 and pd.notna(ema_long.iloc[-1]) and pd.notna(ema_long.iloc[-21]):
+                if abs(ema_long.iloc[-21]) > 0.0001:
+                    slope_20 = (ema_long.iloc[-1] - ema_long.iloc[-21]) / abs(ema_long.iloc[-21])
+        except:
+            pass
+    
+    return slope_5, slope_20
+
+
+def calculate_all_slopes(fundamentals: Dict, ratios: Dict) -> Dict:
+    """
+    Calculate all fundamental slopes for merit scoring.
+    """
+    slopes = {}
+    
+    # Revenue slopes
+    slopes['Rev_Slope_5'], slopes['Rev_Slope_20'] = calculate_slopes(fundamentals.get('revenue', []))
+    
+    # FCF slopes
+    slopes['FCF_Slope_5'], slopes['FCF_Slope_20'] = calculate_slopes(fundamentals.get('fcf', []))
+    
+    # Net Income slopes (as proxy for EPS/Deps)
+    slopes['Deps_Slope_5'], slopes['Deps_Slope_20'] = calculate_slopes(fundamentals.get('net_income', []))
+    
+    # Ratio slopes
+    slopes['P/E Ratio_Slope_5'], slopes['P/E Ratio_Slope_20'] = calculate_slopes(ratios.get('pe_ratio', []))
+    slopes['Current Ratio_Slope_5'], slopes['Current Ratio_Slope_20'] = calculate_slopes(ratios.get('current_ratio', []))
+    slopes['Return on Equity_Slope_5'], slopes['Return on Equity_Slope_20'] = calculate_slopes(ratios.get('roe', []))
+    slopes['Return on Assets_Slope_5'], slopes['Return on Assets_Slope_20'] = calculate_slopes(ratios.get('roa', []))
+    slopes['Net Profit Margin_Slope_5'], slopes['Net Profit Margin_Slope_20'] = calculate_slopes(ratios.get('net_profit_margin', []))
+    slopes['Debt to Equity Ratio_Slope_5'], slopes['Debt to Equity Ratio_Slope_20'] = calculate_slopes(ratios.get('debt_to_equity', []))
+    slopes['Price to Book Ratio_Slope_5'], slopes['Price to Book Ratio_Slope_20'] = calculate_slopes(ratios.get('price_to_book', []))
+    slopes['Price to Sales Ratio_Slope_5'], slopes['Price to Sales Ratio_Slope_20'] = calculate_slopes(ratios.get('price_to_sales', []))
+    slopes['Asset Turnover_Slope_5'], slopes['Asset Turnover_Slope_20'] = calculate_slopes(ratios.get('asset_turnover', []))
+    
+    # Get latest FCFY
+    fcfy_list = ratios.get('fcfy', [])
+    slopes['FCFY'] = fcfy_list[-1] if fcfy_list and fcfy_list[-1] is not None else None
+    
+    return slopes
+
+
+def fetch_all_fundamental_data():
+    """
+    Fetch fundamental data for all symbols and calculate slopes.
+    """
+    print("\n📊 FETCHING FUNDAMENTAL DATA...")
+    
+    success_count = 0
+    fail_count = 0
+    
+    for i, symbol in enumerate(config.symbols):
+        try:
+            # Fetch raw fundamental data
+            fundamentals = fetch_fundamental_data_polygon(symbol)
+            
+            if fundamentals and len(fundamentals.get('revenue', [])) >= 4:
+                # Get current price and market cap from week52 data
+                current_price = None
+                market_cap = None
+                
+                if symbol in config.week52_data:
+                    w52 = config.week52_data[symbol]
+                    if w52.get('high') and w52.get('low'):
+                        # Estimate current price from percentile
+                        current_price = (w52['high'] + w52['low']) / 2
+                
+                # Fetch current quote for accurate price
+                try:
+                    quote_url = f"{config.polygon_rest_url}/v2/aggs/ticker/{symbol}/prev?adjusted=true&apiKey={config.polygon_api_key}"
+                    quote_resp = requests.get(quote_url, timeout=10)
+                    if quote_resp.status_code == 200:
+                        quote_data = quote_resp.json()
+                        if quote_data.get('results') and len(quote_data['results']) > 0:
+                            current_price = quote_data['results'][0].get('c', current_price)
+                except:
+                    pass
+                
+                # Estimate market cap (shares outstanding * price)
+                # For now, use a rough estimate from fundamentals
+                if fundamentals.get('shareholders_equity') and current_price:
+                    # Very rough estimate
+                    latest_equity = fundamentals['shareholders_equity'][-1]
+                    if latest_equity and latest_equity > 0:
+                        market_cap = latest_equity * 2  # Rough multiplier
+                    else:
+                        market_cap = 1e9  # Default 1B
+                else:
+                    market_cap = 1e9
+                
+                if current_price is None:
+                    current_price = 100  # Default
+                
+                # Calculate ratios
+                ratios = calculate_financial_ratios(fundamentals, current_price, market_cap)
+                
+                # Calculate all slopes
+                slopes = calculate_all_slopes(fundamentals, ratios)
+                
+                # Store
+                config.fundamental_data[symbol] = fundamentals
+                config.fundamental_slopes[symbol] = slopes
+                
+                success_count += 1
+            else:
+                fail_count += 1
+                
+        except Exception as e:
+            fail_count += 1
+        
+        if (i + 1) % 25 == 0:
+            print(f"   📈 Fundamentals: {i + 1}/{len(config.symbols)} (✓{success_count} ✗{fail_count})")
+        
+        time.sleep(0.15)  # Rate limiting
+    
+    print(f"✅ Fundamental data: {success_count} success, {fail_count} failed\n")
+
+
+# ============================================================================
+# MERIT SCORE CALCULATIONS
+# ============================================================================
+
+def calculate_stasis_merit_score(snapshot: Dict) -> int:
+    """
+    Calculate Stasis Merit Score (SMS) based on:
+    - Stasis count (pattern strength)
+    - Risk:Reward ratio
+    - Signal strength
+    - Duration (confirmation)
+    
+    Max Score: 22 points
+    """
+    merit_score = 0
+    
+    # Stasis count scoring (0-10 points)
+    stasis = snapshot.get('stasis', 0)
+    if stasis >= 15:
+        merit_score += 10
+    elif stasis >= 12:
+        merit_score += 9
+    elif stasis >= 10:
+        merit_score += 8
+    elif stasis >= 8:
+        merit_score += 7
+    elif stasis >= 7:
+        merit_score += 6
+    elif stasis >= 6:
+        merit_score += 5
+    elif stasis >= 5:
+        merit_score += 4
+    elif stasis >= 4:
+        merit_score += 3
+    elif stasis >= 3:
+        merit_score += 2
+    elif stasis >= 2:
+        merit_score += 1
+    
+    # Risk:Reward scoring (0-5 points)
+    rr = snapshot.get('risk_reward')
+    if rr is not None:
+        if rr >= 3:
+            merit_score += 5
+        elif rr >= 2.5:
+            merit_score += 4
+        elif rr >= 2:
+            merit_score += 3
+        elif rr >= 1.5:
+            merit_score += 2
+        elif rr >= 1:
+            merit_score += 1
+    
+    # Signal strength scoring (0-4 points)
+    strength = snapshot.get('signal_strength')
+    if strength == 'VERY_STRONG':
+        merit_score += 4
+    elif strength == 'STRONG':
+        merit_score += 3
+    elif strength == 'MODERATE':
+        merit_score += 2
+    elif strength == 'WEAK':
+        merit_score += 1
+    
+    # Duration scoring (0-3 points)
+    duration_seconds = snapshot.get('duration_seconds', 0)
+    if duration_seconds >= 3600:
+        merit_score += 3
+    elif duration_seconds >= 1800:
+        merit_score += 2
+    elif duration_seconds >= 900:
+        merit_score += 1
+    
+    return merit_score
+
+
+def calculate_fundamental_merit_score(symbol: str, week52_percentile: Optional[float]) -> Tuple[int, Dict]:
+    """
+    Calculate Fundamental Merit Score (FMS) based on:
+    - Fundamental growth SLOPES (steepness)
+    - 52-week percentile (value position)
+    - FCFY (cash yield)
+    
+    Max Score: ~55 points
+    
+    Returns: (score, slope_details_dict)
+    """
+    merit_score = 0
+    slope_details = {}
+    
+    slopes = config.fundamental_slopes.get(symbol, {})
+    
+    if not slopes:
+        # No fundamental data available - return with just 52W percentile scoring
+        if week52_percentile is not None:
+            if week52_percentile <= 5: merit_score += 8
+            elif week52_percentile <= 15: merit_score += 7
+            elif week52_percentile <= 25: merit_score += 6
+            elif week52_percentile <= 35: merit_score += 5
+            elif week52_percentile <= 45: merit_score += 4
+            elif week52_percentile <= 55: merit_score += 3
+            elif week52_percentile <= 65: merit_score += 2
+            elif week52_percentile <= 75: merit_score += 1
+        return merit_score, slope_details
+    
+    # ========================================
+    # GROWTH METRICS - Positive slope = GOOD
+    # ========================================
+    
+    # REVENUE SLOPES (critical growth indicator)
+    rev_slope_5 = slopes.get('Rev_Slope_5')
+    rev_slope_20 = slopes.get('Rev_Slope_20')
+    slope_details['Rev_5'] = rev_slope_5
+    slope_details['Rev_20'] = rev_slope_20
+    
+    if rev_slope_5 is not None:
+        if rev_slope_5 >= 0.30: merit_score += 4      # 30%+ = exceptional growth
+        elif rev_slope_5 >= 0.20: merit_score += 3    # 20%+ = strong
+        elif rev_slope_5 >= 0.10: merit_score += 2    # 10%+ = solid
+        elif rev_slope_5 >= 0.05: merit_score += 1    # 5%+ = positive
+    
+    if rev_slope_20 is not None:
+        if rev_slope_20 >= 0.20: merit_score += 3
+        elif rev_slope_20 >= 0.10: merit_score += 2
+        elif rev_slope_20 >= 0.05: merit_score += 1
+    
+    # FCF SLOPES (cash generation acceleration)
+    fcf_slope_5 = slopes.get('FCF_Slope_5')
+    fcf_slope_20 = slopes.get('FCF_Slope_20')
+    slope_details['FCF_5'] = fcf_slope_5
+    slope_details['FCF_20'] = fcf_slope_20
+    
+    if fcf_slope_5 is not None:
+        if fcf_slope_5 >= 0.40: merit_score += 4
+        elif fcf_slope_5 >= 0.25: merit_score += 3
+        elif fcf_slope_5 >= 0.10: merit_score += 2
+        elif fcf_slope_5 >= 0.05: merit_score += 1
+    
+    if fcf_slope_20 is not None:
+        if fcf_slope_20 >= 0.25: merit_score += 3
+        elif fcf_slope_20 >= 0.15: merit_score += 2
+        elif fcf_slope_20 >= 0.05: merit_score += 1
+    
+    # ROE SLOPES (profitability improvement)
+    roe_slope_5 = slopes.get('Return on Equity_Slope_5')
+    roe_slope_20 = slopes.get('Return on Equity_Slope_20')
+    slope_details['ROE_5'] = roe_slope_5
+    
+    if roe_slope_5 is not None:
+        if roe_slope_5 >= 0.20: merit_score += 2
+        elif roe_slope_5 >= 0.10: merit_score += 1
+    
+    if roe_slope_20 is not None:
+        if roe_slope_20 >= 0.15: merit_score += 2
+        elif roe_slope_20 >= 0.08: merit_score += 1
+    
+    # ROA SLOPES
+    roa_slope_5 = slopes.get('Return on Assets_Slope_5')
+    slope_details['ROA_5'] = roa_slope_5
+    
+    if roa_slope_5 is not None:
+        if roa_slope_5 >= 0.15: merit_score += 2
+        elif roa_slope_5 >= 0.08: merit_score += 1
+    
+    # NET PROFIT MARGIN SLOPES (margin expansion)
+    npm_slope_5 = slopes.get('Net Profit Margin_Slope_5')
+    npm_slope_20 = slopes.get('Net Profit Margin_Slope_20')
+    slope_details['NPM_5'] = npm_slope_5
+    
+    if npm_slope_5 is not None:
+        if npm_slope_5 >= 0.20: merit_score += 2
+        elif npm_slope_5 >= 0.10: merit_score += 1
+    
+    if npm_slope_20 is not None:
+        if npm_slope_20 >= 0.15: merit_score += 2
+        elif npm_slope_20 >= 0.08: merit_score += 1
+    
+    # ASSET TURNOVER & CURRENT RATIO
+    at_slope_5 = slopes.get('Asset Turnover_Slope_5')
+    cr_slope_5 = slopes.get('Current Ratio_Slope_5')
+    
+    if at_slope_5 is not None and at_slope_5 >= 0.10: merit_score += 1
+    if cr_slope_5 is not None and cr_slope_5 >= 0.10: merit_score += 1
+    
+    # ========================================
+    # VALUATION METRICS - Negative slope = GOOD
+    # (Stock getting CHEAPER relative to fundamentals)
+    # ========================================
+    
+    # P/E RATIO SLOPES (declining = getting cheaper)
+    pe_slope_5 = slopes.get('P/E Ratio_Slope_5')
+    pe_slope_20 = slopes.get('P/E Ratio_Slope_20')
+    slope_details['PE_5'] = pe_slope_5
+    
+    if pe_slope_5 is not None:
+        if pe_slope_5 <= -0.25: merit_score += 3
+        elif pe_slope_5 <= -0.15: merit_score += 2
+        elif pe_slope_5 <= -0.05: merit_score += 1
+    
+    if pe_slope_20 is not None:
+        if pe_slope_20 <= -0.20: merit_score += 2
+        elif pe_slope_20 <= -0.10: merit_score += 1
+    
+    # DEBT TO EQUITY SLOPES (declining = deleveraging)
+    de_slope_5 = slopes.get('Debt to Equity Ratio_Slope_5')
+    de_slope_20 = slopes.get('Debt to Equity Ratio_Slope_20')
+    slope_details['DE_5'] = de_slope_5
+    
+    if de_slope_5 is not None:
+        if de_slope_5 <= -0.20: merit_score += 2
+        elif de_slope_5 <= -0.10: merit_score += 1
+    
+    if de_slope_20 is not None:
+        if de_slope_20 <= -0.15: merit_score += 2
+        elif de_slope_20 <= -0.08: merit_score += 1
+    
+    # PRICE TO BOOK & PRICE TO SALES SLOPES
+    pb_slope_5 = slopes.get('Price to Book Ratio_Slope_5')
+    ps_slope_5 = slopes.get('Price to Sales Ratio_Slope_5')
+    
+    if pb_slope_5 is not None and pb_slope_5 <= -0.20: merit_score += 1
+    if ps_slope_5 is not None and ps_slope_5 <= -0.20: merit_score += 1
+    
+    # ========================================
+    # 52-WEEK PERCENTILE (Lower = buying at value)
+    # ========================================
+    if week52_percentile is not None:
+        if week52_percentile <= 5: merit_score += 8
+        elif week52_percentile <= 15: merit_score += 7
+        elif week52_percentile <= 25: merit_score += 6
+        elif week52_percentile <= 35: merit_score += 5
+        elif week52_percentile <= 45: merit_score += 4
+        elif week52_percentile <= 55: merit_score += 3
+        elif week52_percentile <= 65: merit_score += 2
+        elif week52_percentile <= 75: merit_score += 1
+    
+    # ========================================
+    # FCFY - Free Cash Flow Yield (Higher = value)
+    # ========================================
+    fcfy = slopes.get('FCFY')
+    slope_details['FCFY'] = fcfy
+    
+    if fcfy is not None:
+        if fcfy >= 0.15: merit_score += 3      # 15%+ FCFY = exceptional
+        elif fcfy >= 0.10: merit_score += 2    # 10%+ = strong
+        elif fcfy >= 0.05: merit_score += 1    # 5%+ = solid
+    
+    return merit_score, slope_details
+
+
+def calculate_combined_merit_score(snapshot: Dict) -> Tuple[int, int, int, Dict]:
+    """
+    Calculate both merit scores.
+    Returns: (stasis_merit, fundamental_merit, combined_total, slope_details)
+    """
+    sms = calculate_stasis_merit_score(snapshot)
+    fms, slope_details = calculate_fundamental_merit_score(
+        snapshot.get('symbol', ''),
+        snapshot.get('week52_percentile')
+    )
+    return sms, fms, sms + fms, slope_details
+
 
 # ============================================================================
 # DATA FETCHERS
@@ -236,31 +744,37 @@ def fetch_52_week_data() -> Dict[str, Dict]:
                 if data.get('results') and len(data['results']) > 0:
                     highs = [bar['h'] for bar in data['results']]
                     lows = [bar['l'] for bar in data['results']]
+                    closes = [bar['c'] for bar in data['results']]
+                    
                     high_val = max(highs)
                     low_val = min(lows)
+                    current_close = closes[-1] if closes else None
+                    
                     week52_data[symbol] = {
                         'high': high_val,
                         'low': low_val,
                         'range': high_val - low_val,
+                        'current': current_close,
                     }
                     success_count += 1
                 else:
-                    week52_data[symbol] = {'high': None, 'low': None, 'range': None}
+                    week52_data[symbol] = {'high': None, 'low': None, 'range': None, 'current': None}
                     fail_count += 1
             else:
-                week52_data[symbol] = {'high': None, 'low': None, 'range': None}
+                week52_data[symbol] = {'high': None, 'low': None, 'range': None, 'current': None}
                 fail_count += 1
             
-            if (i + 1) % 100 == 0:
+            if (i + 1) % 50 == 0:
                 print(f"   📈 Processed {i + 1}/{len(config.symbols)} (✓{success_count} ✗{fail_count})...")
             
             time.sleep(0.12)
         except:
-            week52_data[symbol] = {'high': None, 'low': None, 'range': None}
+            week52_data[symbol] = {'high': None, 'low': None, 'range': None, 'current': None}
             fail_count += 1
     
     print(f"✅ 52-week data: {success_count} success, {fail_count} failed\n")
     return week52_data
+
 
 def fetch_volume_data() -> Dict[str, float]:
     print("📊 Fetching volume data...")
@@ -289,7 +803,7 @@ def fetch_volume_data() -> Dict[str, float]:
             else:
                 volumes[symbol] = 10.0
             
-            if (i + 1) % 100 == 0:
+            if (i + 1) % 50 == 0:
                 print(f"   📈 Processed {i + 1}/{len(config.symbols)}...")
             
             time.sleep(0.12)
@@ -298,6 +812,7 @@ def fetch_volume_data() -> Dict[str, float]:
     
     print(f"✅ Volume data: {len(volumes)} symbols\n")
     return volumes
+
 
 def fetch_historical_bars(symbol: str, days: int = 5) -> List[Dict]:
     bars = []
@@ -326,6 +841,7 @@ def fetch_historical_bars(symbol: str, days: int = 5) -> List[Dict]:
     
     return bars
 
+
 def calculate_52week_percentile(price: float, symbol: str) -> Optional[float]:
     if symbol not in config.week52_data:
         return None
@@ -339,6 +855,7 @@ def calculate_52week_percentile(price: float, symbol: str) -> Optional[float]:
         return None
     percentile = ((price - low) / range_val) * 100
     return max(0.0, min(100.0, percentile))
+
 
 # ============================================================================
 # STASIS INFO
@@ -371,6 +888,7 @@ class StasisInfo:
             return 0.0
         return (current_price - self.start_price) / self.start_price * 100
 
+
 # ============================================================================
 # BITSTREAM
 # ============================================================================
@@ -380,6 +898,7 @@ class BitEntry:
     bit: int
     price: float
     timestamp: datetime
+
 
 class Bitstream:
     def __init__(self, symbol: str, threshold: float, initial_price: float, volume: float):
@@ -557,7 +1076,8 @@ class Bitstream:
             week52_percentile = calculate_52week_percentile(current_price, self.symbol)
             recent_bits = [b.bit for b in list(self.bits)[-15:]]
             
-            return {
+            # Build base snapshot
+            snapshot = {
                 'symbol': self.symbol,
                 'threshold': self.threshold,
                 'threshold_pct': self.threshold * 100,
@@ -585,6 +1105,16 @@ class Bitstream:
                 'week52_percentile': week52_percentile,
                 'volume': self.volume,
             }
+            
+            # Calculate merit scores
+            sms, fms, combined, slope_details = calculate_combined_merit_score(snapshot)
+            snapshot['stasis_merit_score'] = sms
+            snapshot['fundamental_merit_score'] = fms
+            snapshot['combined_merit_score'] = combined
+            snapshot['slope_details'] = slope_details
+            
+            return snapshot
+
 
 # ============================================================================
 # PRICE FEED
@@ -692,7 +1222,9 @@ class PolygonPriceFeed:
                 'message_count': self.message_count
             }
 
+
 price_feed = PolygonPriceFeed()
+
 
 # ============================================================================
 # BITSTREAM MANAGER
@@ -725,7 +1257,7 @@ class BitstreamManager:
             
             self.backfill_progress = int((i + 1) / len(config.symbols) * 100)
             
-            if (i + 1) % 50 == 0:
+            if (i + 1) % 25 == 0:
                 print(f"   📊 {i + 1}/{len(config.symbols)} ({self.backfill_progress}%)")
             
             time.sleep(0.12)
@@ -796,7 +1328,9 @@ class BitstreamManager:
         with self.cache_lock:
             return copy.deepcopy(self.cached_data)
 
+
 manager = BitstreamManager()
+
 
 # ============================================================================
 # HELPER FUNCTIONS
@@ -805,12 +1339,21 @@ manager = BitstreamManager()
 def format_bits(bits: List[int]) -> str:
     return "".join(str(b) for b in bits) if bits else "—"
 
+
 def format_rr(rr: Optional[float]) -> str:
     if rr is None:
         return "—"
     if rr <= 0:
         return "0:1"
     return f"{rr:.2f}:1" if rr < 10 else f"{rr:.0f}:1"
+
+
+def format_slope(slope: Optional[float]) -> str:
+    if slope is None:
+        return "—"
+    sign = "+" if slope >= 0 else ""
+    return f"{sign}{slope*100:.1f}%"
+
 
 def get_table_data() -> pd.DataFrame:
     data = manager.get_data()
@@ -828,6 +1371,9 @@ def get_table_data() -> pd.DataFrame:
         if d['week52_percentile'] is not None:
             w52_str = f"{d['week52_percentile']:.0f}%"
         
+        # Get slope details
+        slopes = d.get('slope_details', {})
+        
         rows.append({
             'Symbol': d['symbol'],
             'Band': f"{d['threshold_pct']:.2f}%",
@@ -838,31 +1384,33 @@ def get_table_data() -> pd.DataFrame:
             'Current': f"${d['current_price']:.2f}" if d['current_price'] else "—",
             'Current_Val': d['current_price'] or 0,
             'Anchor': f"${d['anchor_price']:.2f}" if d['anchor_price'] else "—",
-            'Anchor_Val': d['anchor_price'] or 0,
             'TP': f"${d['take_profit']:.2f}" if d['take_profit'] else "—",
-            'TP_Val': d['take_profit'] or 0,
             'SL': f"${d['stop_loss']:.2f}" if d['stop_loss'] else "—",
-            'SL_Val': d['stop_loss'] or 0,
             'R:R': format_rr(d['risk_reward']),
             'RR_Val': d['risk_reward'] if d['risk_reward'] is not None else -1,
-            '→TP': f"{d['distance_to_tp_pct']:.2f}%" if d['distance_to_tp_pct'] else "—",
-            '→TP_Val': d['distance_to_tp_pct'] or 0,
-            '→SL': f"{d['distance_to_sl_pct']:.2f}%" if d['distance_to_sl_pct'] else "—",
-            '→SL_Val': d['distance_to_sl_pct'] or 0,
             'Started': d['stasis_start_str'],
             'Duration': d['stasis_duration_str'],
             'Dur_Val': d['duration_seconds'],
             'Chg': chg_str,
-            'Chg_Val': d['stasis_price_change_pct'] if d['stasis_price_change_pct'] else 0,
             '52W': w52_str,
             '52W_Val': d['week52_percentile'] if d['week52_percentile'] is not None else -1,
-            'Bits': d['total_bits'],
-            'Recent': format_bits(d['recent_bits']),
+            # Merit Scores
+            'SMS': d.get('stasis_merit_score', 0),
+            'FMS': d.get('fundamental_merit_score', 0),
+            'TMS': d.get('combined_merit_score', 0),
+            # Key Slopes for display
+            'Rev5': format_slope(slopes.get('Rev_5')),
+            'Rev5_Val': slopes.get('Rev_5') if slopes.get('Rev_5') is not None else -999,
+            'FCF5': format_slope(slopes.get('FCF_5')),
+            'FCF5_Val': slopes.get('FCF_5') if slopes.get('FCF_5') is not None else -999,
+            'ROE5': format_slope(slopes.get('ROE_5')),
+            'FCFY': f"{slopes.get('FCFY', 0)*100:.1f}%" if slopes.get('FCFY') else "—",
             'Tradable': '✅' if d['is_tradable'] else '',
             'Is_Tradable': d['is_tradable'],
         })
     
     return pd.DataFrame(rows)
+
 
 # ============================================================================
 # DASH APP
@@ -884,17 +1432,14 @@ body {
     font-family: 'Roboto Mono', monospace !important;
 }
 
-/* Headers and labels use Orbitron */
 h1, h2, h3, h4, h5, h6, .btn, label, .nav-link, .card-header {
     font-family: 'Orbitron', sans-serif !important;
 }
 
-/* Data and numbers use Roboto Mono */
 td, input, .form-control, pre, code {
     font-family: 'Roboto Mono', monospace !important;
 }
 
-/* Dropdown styling */
 .Select-control, .Select-menu-outer, .Select-option, .Select-value-label {
     font-family: 'Roboto Mono', monospace !important;
     font-size: 11px !important;
@@ -902,24 +1447,25 @@ td, input, .form-control, pre, code {
 """
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.CYBORG])
-app.title = "Beyond Solipsism"
+app.title = "Beyond Price & Time"
 server = app.server
-app.index_string = f'''
+
+app.index_string = '''
 <!DOCTYPE html>
 <html>
     <head>
-        {{%metas%}}
-        <title>{{%title%}}</title>
-        {{%favicon%}}
-        {{%css%}}
-        <style>{CUSTOM_CSS}</style>
+        {%metas%}
+        <title>{%title%}</title>
+        {%favicon%}
+        {%css%}
+        <style>''' + CUSTOM_CSS + '''</style>
     </head>
     <body>
-        {{%app_entry%}}
+        {%app_entry%}
         <footer>
-            {{%config%}}
-            {{%scripts%}}
-            {{%renderer%}}
+            {%config%}
+            {%scripts%}
+            {%renderer%}
         </footer>
     </body>
 </html>
@@ -934,8 +1480,8 @@ app.layout = dbc.Container([
                 html.Div([
                     html.H2("BEYOND PRICE AND TIME", className="text-success mb-0 title-font",
                            style={'fontSize': '24px', 'fontWeight': '700', 'letterSpacing': '3px'}),
-                    html.P("STASIS DETECTION SYSTEM", className="text-muted title-font",
-                          style={'fontSize': '10px', 'fontStyle': 'italic', 'letterSpacing': '2px', 'marginBottom': '0'}),
+                    html.P("STASIS + FUNDAMENTAL SLOPE MERIT SCORING", className="text-muted title-font",
+                          style={'fontSize': '10px', 'letterSpacing': '2px', 'marginBottom': '0'}),
                 ], style={'display': 'inline-block', 'verticalAlign': 'middle'}),
             ], style={'display': 'flex', 'alignItems': 'center'})
         ], width=8),
@@ -967,14 +1513,8 @@ app.layout = dbc.Container([
         ], width=1),
         dbc.Col([
             dcc.Dropdown(id='filter-symbol', 
-                        options=[{'label': 'ALL SYMBOLS', 'value': 'ALL'}] + 
+                        options=[{'label': 'ALL', 'value': 'ALL'}] + 
                         [{'label': s, 'value': s} for s in config.symbols],
-                        value='ALL', clearable=False, style={'fontSize': '10px'})
-        ], width=1),
-        dbc.Col([
-            dcc.Dropdown(id='filter-threshold', 
-                        options=[{'label': 'ALL BANDS', 'value': 'ALL'}] + 
-                        [{'label': f'{t*100:.2f}%', 'value': t} for t in config.thresholds],
                         value='ALL', clearable=False, style={'fontSize': '10px'})
         ], width=1),
         dbc.Col([
@@ -984,18 +1524,28 @@ app.layout = dbc.Container([
         ], width=1),
         dbc.Col([
             dcc.Dropdown(id='filter-direction',
-                        options=[{'label': 'ALL DIRS', 'value': 'ALL'}, 
+                        options=[{'label': 'ALL', 'value': 'ALL'}, 
                                 {'label': 'LONG', 'value': 'LONG'},
                                 {'label': 'SHORT', 'value': 'SHORT'}],
                         value='ALL', clearable=False, style={'fontSize': '10px'})
         ], width=1),
         dbc.Col([
-            dcc.Dropdown(id='filter-rr',
-                        options=[{'label': 'ANY R:R', 'value': -1},
-                                {'label': '≥0.5', 'value': 0.5},
-                                {'label': '≥1', 'value': 1}, 
-                                {'label': '≥2', 'value': 2},
-                                {'label': '≥3', 'value': 3}],
+            dcc.Dropdown(id='filter-fms',
+                        options=[{'label': 'ANY FMS', 'value': -1},
+                                {'label': 'FMS ≥30', 'value': 30},
+                                {'label': 'FMS ≥25', 'value': 25},
+                                {'label': 'FMS ≥20', 'value': 20},
+                                {'label': 'FMS ≥15', 'value': 15},
+                                {'label': 'FMS ≥10', 'value': 10}],
+                        value=-1, clearable=False, style={'fontSize': '10px'})
+        ], width=1),
+        dbc.Col([
+            dcc.Dropdown(id='filter-tms',
+                        options=[{'label': 'ANY TMS', 'value': -1},
+                                {'label': 'TMS ≥50', 'value': 50},
+                                {'label': 'TMS ≥40', 'value': 40},
+                                {'label': 'TMS ≥30', 'value': 30},
+                                {'label': 'TMS ≥20', 'value': 20}],
                         value=-1, clearable=False, style={'fontSize': '10px'})
         ], width=1),
         dbc.Col([
@@ -1003,35 +1553,27 @@ app.layout = dbc.Container([
                         options=[{'label': 'ANY 52W', 'value': 'ALL'},
                                 {'label': '0-20%', 'value': '0-20'}, 
                                 {'label': '20-40%', 'value': '20-40'},
-                                {'label': '40-60%', 'value': '40-60'}, 
-                                {'label': '60-80%', 'value': '60-80'},
-                                {'label': '80-100%', 'value': '80-100'}],
+                                {'label': '40-60%', 'value': '40-60'}],
                         value='ALL', clearable=False, style={'fontSize': '10px'})
-        ], width=1),
-        dbc.Col([
-            dcc.Dropdown(id='filter-duration',
-                        options=[{'label': 'ANY DUR', 'value': 0}, 
-                                {'label': '5m+', 'value': 300},
-                                {'label': '15m+', 'value': 900}, 
-                                {'label': '1h+', 'value': 3600}],
-                        value=0, clearable=False, style={'fontSize': '10px'})
         ], width=1),
         dbc.Col([
             dcc.Dropdown(id='filter-rows',
                         options=[{'label': '50', 'value': 50}, 
                                 {'label': '100', 'value': 100},
                                 {'label': '250', 'value': 250},
-                                {'label': '500', 'value': 500},
                                 {'label': 'ALL', 'value': 10000}],
                         value=100, clearable=False, style={'fontSize': '10px'})
         ], width=1),
         dbc.Col([
             dcc.Dropdown(id='filter-sort',
-                        options=[{'label': 'STASIS ↓', 'value': 'stasis'}, 
-                                {'label': 'R:R ↓', 'value': 'rr'},
-                                {'label': 'DUR ↓', 'value': 'duration'}, 
+                        options=[{'label': 'TMS ↓', 'value': 'tms'},
+                                {'label': 'FMS ↓', 'value': 'fms'},
+                                {'label': 'SMS ↓', 'value': 'sms'},
+                                {'label': 'REV SLOPE ↓', 'value': 'rev'},
+                                {'label': 'FCF SLOPE ↓', 'value': 'fcf'},
+                                {'label': 'STASIS ↓', 'value': 'stasis'}, 
                                 {'label': '52W ↑', 'value': '52w'}],
-                        value='stasis', clearable=False, style={'fontSize': '10px'})
+                        value='tms', clearable=False, style={'fontSize': '10px'})
         ], width=1),
     ], className="mb-2 g-1"),
     
@@ -1041,30 +1583,30 @@ app.layout = dbc.Container([
             dash_table.DataTable(
                 id='main-table',
                 columns=[
-                    {'name': '✓', 'id': 'Tradable', 'sortable': True},
-                    {'name': 'SYMBOL', 'id': 'Symbol', 'sortable': True},
-                    {'name': 'BAND', 'id': 'Band', 'sortable': True},
-                    {'name': 'STASIS', 'id': 'Stasis', 'sortable': True},
-                    {'name': 'DIR', 'id': 'Dir', 'sortable': True},
-                    {'name': 'STR', 'id': 'Str', 'sortable': True},
-                    {'name': 'CURRENT', 'id': 'Current', 'sortable': True},
-                    {'name': 'ANCHOR', 'id': 'Anchor', 'sortable': True},
-                    {'name': 'TP', 'id': 'TP', 'sortable': True},
-                    {'name': 'SL', 'id': 'SL', 'sortable': True},
-                    {'name': 'R:R', 'id': 'R:R', 'sortable': True},
-                    {'name': '→TP', 'id': '→TP', 'sortable': True},
-                    {'name': '→SL', 'id': '→SL', 'sortable': True},
-                    {'name': 'STARTED', 'id': 'Started', 'sortable': True},
-                    {'name': 'DUR', 'id': 'Duration', 'sortable': True},
-                    {'name': 'CHG', 'id': 'Chg', 'sortable': True},
-                    {'name': '52W', 'id': '52W', 'sortable': True},
-                    {'name': 'BITS', 'id': 'Bits', 'sortable': True},
-                    {'name': 'RECENT', 'id': 'Recent', 'sortable': False},
+                    {'name': '✓', 'id': 'Tradable'},
+                    {'name': 'SYM', 'id': 'Symbol'},
+                    {'name': 'BAND', 'id': 'Band'},
+                    {'name': 'STS', 'id': 'Stasis'},
+                    {'name': 'DIR', 'id': 'Dir'},
+                    {'name': 'SMS', 'id': 'SMS'},
+                    {'name': 'FMS', 'id': 'FMS'},
+                    {'name': 'TMS', 'id': 'TMS'},
+                    {'name': 'REV5', 'id': 'Rev5'},
+                    {'name': 'FCF5', 'id': 'FCF5'},
+                    {'name': 'ROE5', 'id': 'ROE5'},
+                    {'name': 'FCFY', 'id': 'FCFY'},
+                    {'name': '52W', 'id': '52W'},
+                    {'name': 'PRICE', 'id': 'Current'},
+                    {'name': 'TP', 'id': 'TP'},
+                    {'name': 'SL', 'id': 'SL'},
+                    {'name': 'R:R', 'id': 'R:R'},
+                    {'name': 'DUR', 'id': 'Duration'},
+                    {'name': 'CHG', 'id': 'Chg'},
                 ],
                 sort_action='native',
                 sort_mode='multi',
-                sort_by=[{'column_id': 'Stasis', 'direction': 'desc'}],
-                style_table={'height': '60vh', 'overflowY': 'auto'},
+                sort_by=[{'column_id': 'TMS', 'direction': 'desc'}],
+                style_table={'height': '62vh', 'overflowY': 'auto'},
                 style_cell={
                     'backgroundColor': '#1a1a2e', 
                     'color': 'white',
@@ -1073,14 +1615,12 @@ app.layout = dbc.Container([
                     'fontFamily': 'Roboto Mono, monospace', 
                     'whiteSpace': 'nowrap',
                     'textAlign': 'right',
-                    'minWidth': '50px',
+                    'minWidth': '40px',
                 },
                 style_cell_conditional=[
                     {'if': {'column_id': 'Symbol'}, 'textAlign': 'left', 'fontWeight': '600'},
                     {'if': {'column_id': 'Dir'}, 'textAlign': 'center'},
-                    {'if': {'column_id': 'Str'}, 'textAlign': 'center'},
                     {'if': {'column_id': 'Tradable'}, 'textAlign': 'center'},
-                    {'if': {'column_id': 'Recent'}, 'textAlign': 'left', 'minWidth': '100px'},
                 ],
                 style_header={
                     'backgroundColor': '#2a2a4e', 
@@ -1090,27 +1630,36 @@ app.layout = dbc.Container([
                     'fontFamily': 'Orbitron, sans-serif',
                     'borderBottom': '2px solid #00ff88',
                     'textAlign': 'center',
-                    'letterSpacing': '0.5px',
                 },
                 style_data_conditional=[
                     {'if': {'filter_query': '{Stasis} >= 10'}, 'backgroundColor': '#2d4a2d'},
                     {'if': {'filter_query': '{Stasis} >= 7 && {Stasis} < 10'}, 'backgroundColor': '#2a3a2a'},
-                    {'if': {'filter_query': '{Stasis} >= 5 && {Stasis} < 7'}, 'backgroundColor': '#252a25'},
                     {'if': {'filter_query': '{Dir} = "LONG"', 'column_id': 'Dir'}, 'color': '#00ff00', 'fontWeight': 'bold'},
                     {'if': {'filter_query': '{Dir} = "SHORT"', 'column_id': 'Dir'}, 'color': '#ff4444', 'fontWeight': 'bold'},
-                    {'if': {'filter_query': '{Str} = "VERY_STRONG"', 'column_id': 'Str'}, 'color': '#ffff00'},
-                    {'if': {'filter_query': '{Str} = "STRONG"', 'column_id': 'Str'}, 'color': '#ffaa00'},
                     {'if': {'column_id': 'Current'}, 'color': '#00ffff', 'fontWeight': '600'},
-                    {'if': {'column_id': 'Anchor'}, 'color': '#ffaa00'},
                     {'if': {'column_id': 'TP'}, 'color': '#00ff00'},
                     {'if': {'column_id': 'SL'}, 'color': '#ff4444'},
-                    {'if': {'filter_query': '{RR_Val} >= 2', 'column_id': 'R:R'}, 'color': '#00ff00', 'fontWeight': '600'},
-                    {'if': {'filter_query': '{RR_Val} >= 1 && {RR_Val} < 2', 'column_id': 'R:R'}, 'color': '#88ff88'},
-                    {'if': {'filter_query': '{RR_Val} < 1 && {RR_Val} >= 0', 'column_id': 'R:R'}, 'color': '#ffaa00'},
-                    {'if': {'filter_query': '{Chg} contains "+"', 'column_id': 'Chg'}, 'color': '#00ff00'},
-                    {'if': {'filter_query': '{Chg} contains "-"', 'column_id': 'Chg'}, 'color': '#ff4444'},
+                    # TMS coloring
+                    {'if': {'filter_query': '{TMS} >= 50', 'column_id': 'TMS'}, 'backgroundColor': '#00ff00', 'color': '#000'},
+                    {'if': {'filter_query': '{TMS} >= 40 && {TMS} < 50', 'column_id': 'TMS'}, 'backgroundColor': '#44ff44', 'color': '#000'},
+                    {'if': {'filter_query': '{TMS} >= 30 && {TMS} < 40', 'column_id': 'TMS'}, 'backgroundColor': '#88ff00', 'color': '#000'},
+                    {'if': {'filter_query': '{TMS} >= 20 && {TMS} < 30', 'column_id': 'TMS'}, 'color': '#aaff00'},
+                    # FMS coloring
+                    {'if': {'filter_query': '{FMS} >= 30', 'column_id': 'FMS'}, 'backgroundColor': '#ffaa00', 'color': '#000'},
+                    {'if': {'filter_query': '{FMS} >= 20 && {FMS} < 30', 'column_id': 'FMS'}, 'color': '#ffaa00'},
+                    # Slope coloring (positive = green)
+                    {'if': {'filter_query': '{Rev5} contains "+"', 'column_id': 'Rev5'}, 'color': '#00ff00'},
+                    {'if': {'filter_query': '{Rev5} contains "-"', 'column_id': 'Rev5'}, 'color': '#ff4444'},
+                    {'if': {'filter_query': '{FCF5} contains "+"', 'column_id': 'FCF5'}, 'color': '#00ff00'},
+                    {'if': {'filter_query': '{FCF5} contains "-"', 'column_id': 'FCF5'}, 'color': '#ff4444'},
+                    {'if': {'filter_query': '{ROE5} contains "+"', 'column_id': 'ROE5'}, 'color': '#00ff00'},
+                    {'if': {'filter_query': '{ROE5} contains "-"', 'column_id': 'ROE5'}, 'color': '#ff4444'},
+                    # 52W coloring
                     {'if': {'filter_query': '{52W_Val} >= 0 && {52W_Val} <= 20', 'column_id': '52W'}, 'color': '#00ff00'},
                     {'if': {'filter_query': '{52W_Val} >= 80', 'column_id': '52W'}, 'color': '#ff4444'},
+                    # Chg coloring
+                    {'if': {'filter_query': '{Chg} contains "+"', 'column_id': 'Chg'}, 'color': '#00ff00'},
+                    {'if': {'filter_query': '{Chg} contains "-"', 'column_id': 'Chg'}, 'color': '#ff4444'},
                     {'if': {'row_index': 'odd'}, 'backgroundColor': '#151520'},
                 ]
             )
@@ -1121,19 +1670,15 @@ app.layout = dbc.Container([
     dbc.Row([
         dbc.Col([
             html.Div([
-                html.Span("CURRENT", className="title-font", style={'color': '#00ffff', 'fontSize': '9px', 'fontWeight': 'bold'}),
-                html.Span(" = Live Price | ", style={'fontSize': '9px'}),
-                html.Span("ANCHOR", className="title-font", style={'color': '#ffaa00', 'fontSize': '9px', 'fontWeight': 'bold'}),
-                html.Span(" = Stasis Start Price | ", style={'fontSize': '9px'}),
-                html.Span("TP", className="title-font", style={'color': '#00ff00', 'fontSize': '9px', 'fontWeight': 'bold'}),
-                html.Span(" = Take Profit | ", style={'fontSize': '9px'}),
-                html.Span("SL", className="title-font", style={'color': '#ff4444', 'fontSize': '9px', 'fontWeight': 'bold'}),
-                html.Span(" = Stop Loss | ", style={'fontSize': '9px'}),
-                html.Span("STARTED", className="title-font", style={'color': '#aaaaaa', 'fontSize': '9px', 'fontWeight': 'bold'}),
-                html.Span(" = Stasis Start Date/Time", style={'fontSize': '9px'}),
+                html.Span("SMS", style={'color': '#00ffff', 'fontSize': '9px', 'fontWeight': 'bold'}),
+                html.Span(" = Stasis Merit | ", style={'fontSize': '9px'}),
+                html.Span("FMS", style={'color': '#ffaa00', 'fontSize': '9px', 'fontWeight': 'bold'}),
+                html.Span(" = Fundamental Merit (Slopes+52W+FCFY) | ", style={'fontSize': '9px'}),
+                html.Span("REV5/FCF5/ROE5", style={'color': '#00ff00', 'fontSize': '9px', 'fontWeight': 'bold'}),
+                html.Span(" = 5Q Growth Slopes", style={'fontSize': '9px'}),
             ], className="text-center text-muted mt-1"),
             html.Hr(style={'borderColor': '#333', 'margin': '8px 0'}),
-            html.P("© 2026 TRUTH COMMUNICATIONS LLC. ALL RIGHTS RESERVED.",
+            html.P("© 2026 TRUTH COMMUNICATIONS LLC",
                   className="text-muted text-center mb-0 title-font",
                   style={'fontSize': '9px', 'letterSpacing': '2px'}),
         ])
@@ -1143,6 +1688,7 @@ app.layout = dbc.Container([
     dcc.Interval(id='refresh-interval', interval=config.update_interval_ms, n_intervals=0)
     
 ], fluid=True, className="p-2", style={'backgroundColor': '#0a0a0a'})
+
 
 # ============================================================================
 # CALLBACKS
@@ -1162,6 +1708,7 @@ def toggle_view(n1, n2, current):
         return True, False, 'all'
     return False, True, 'tradable'
 
+
 @app.callback(
     Output('connection-status', 'children'),
     Input('refresh-interval', 'n_intervals')
@@ -1171,12 +1718,13 @@ def update_status(n):
         return html.Span(f"⏳ LOADING... {manager.backfill_progress}%", className="text-warning")
     
     status = price_feed.get_status()
+    fund_count = len(config.fundamental_slopes)
+    
     if status['connected'] == 0:
-        return html.Span(f"🔴 CONNECTING...", className="text-warning")
-    elif status['connected'] < status['total']:
-        return html.Span(f"🟡 {status['connected']}/{status['total']}", className="text-info data-font")
-    return html.Span(f"🟢 LIVE {status['connected']}/{status['total']} | {status['message_count']:,}", 
+        return html.Span(f"🔴 CONNECTING... | 📊 {fund_count} fundamentals", className="text-warning")
+    return html.Span(f"🟢 LIVE {status['connected']}/{status['total']} | 📊 {fund_count} fundamentals", 
                     className="text-success data-font")
+
 
 @app.callback(
     Output('stats-display', 'children'),
@@ -1184,51 +1732,50 @@ def update_status(n):
 )
 def update_stats(n):
     if not manager.backfill_complete:
-        return html.Span(f"⏳ LOADING {len(config.symbols)} STOCKS... {manager.backfill_progress}%", 
-                        className="text-warning title-font")
+        return html.Span(f"⏳ LOADING... {manager.backfill_progress}%", className="text-warning title-font")
     
     data = manager.get_data()
     if not data:
         return html.Span("LOADING...", className="text-muted title-font")
     
     tradable = [d for d in data if d['is_tradable']]
-    with_rr = [d for d in tradable if d['risk_reward'] is not None and d['risk_reward'] > 0]
-    avg_rr = np.mean([d['risk_reward'] for d in with_rr]) if with_rr else 0
     long_count = sum(1 for d in tradable if d['direction'] == 'LONG')
     short_count = sum(1 for d in tradable if d['direction'] == 'SHORT')
-    max_stasis = max([d['stasis'] for d in data]) if data else 0
-    with_52w = sum(1 for d in data if d['week52_percentile'] is not None)
+    
+    avg_fms = np.mean([d.get('fundamental_merit_score', 0) for d in tradable]) if tradable else 0
+    avg_tms = np.mean([d.get('combined_merit_score', 0) for d in tradable]) if tradable else 0
+    max_tms = max([d.get('combined_merit_score', 0) for d in tradable]) if tradable else 0
     
     return html.Div([
         html.Span("🎯 TRADABLE: ", className="title-font", style={'fontSize': '11px'}),
         html.Span(f"{len(tradable)}", className="data-font text-success", style={'fontSize': '12px', 'fontWeight': '600'}),
-        html.Span("  📈 LONG: ", className="title-font ms-3", style={'fontSize': '11px'}),
+        html.Span("  📈 LONG: ", className="title-font ms-2", style={'fontSize': '11px'}),
         html.Span(f"{long_count}", className="data-font text-success", style={'fontSize': '12px'}),
-        html.Span("  📉 SHORT: ", className="title-font ms-3", style={'fontSize': '11px'}),
+        html.Span("  📉 SHORT: ", className="title-font ms-2", style={'fontSize': '11px'}),
         html.Span(f"{short_count}", className="data-font text-danger", style={'fontSize': '12px'}),
-        html.Span("  ⚡ MAX: ", className="title-font ms-3", style={'fontSize': '11px'}),
-        html.Span(f"{max_stasis}", className="data-font text-warning", style={'fontSize': '12px'}),
-        html.Span("  📊 AVG R:R: ", className="title-font ms-3", style={'fontSize': '11px'}),
-        html.Span(f"{avg_rr:.2f}:1", className="data-font text-info", style={'fontSize': '12px'}),
-        html.Span("  📅 52W: ", className="title-font ms-3", style={'fontSize': '11px'}),
-        html.Span(f"{with_52w}", className="data-font text-muted", style={'fontSize': '12px'}),
+        html.Span("  📊 AVG FMS: ", className="title-font ms-2", style={'fontSize': '11px'}),
+        html.Span(f"{avg_fms:.1f}", className="data-font text-warning", style={'fontSize': '12px'}),
+        html.Span("  🏆 AVG TMS: ", className="title-font ms-2", style={'fontSize': '11px'}),
+        html.Span(f"{avg_tms:.1f}", className="data-font text-success", style={'fontSize': '12px'}),
+        html.Span("  🥇 MAX TMS: ", className="title-font ms-2", style={'fontSize': '11px'}),
+        html.Span(f"{max_tms}", className="data-font text-warning", style={'fontSize': '12px', 'fontWeight': '600'}),
     ])
+
 
 @app.callback(
     Output('main-table', 'data'),
     [Input('refresh-interval', 'n_intervals'),
      Input('view-mode', 'data'),
      Input('filter-symbol', 'value'),
-     Input('filter-threshold', 'value'),
      Input('filter-stasis', 'value'),
      Input('filter-direction', 'value'),
-     Input('filter-rr', 'value'),
+     Input('filter-fms', 'value'),
+     Input('filter-tms', 'value'),
      Input('filter-52w', 'value'),
-     Input('filter-duration', 'value'),
      Input('filter-rows', 'value'),
      Input('filter-sort', 'value')]
 )
-def update_table(n, view_mode, sym, thresh, stasis, direction, rr, w52, duration, rows, sort):
+def update_table(n, view_mode, sym, stasis, direction, fms_min, tms_min, w52, rows, sort):
     df = get_table_data()
     if df.empty:
         return []
@@ -1238,48 +1785,54 @@ def update_table(n, view_mode, sym, thresh, stasis, direction, rr, w52, duration
     
     if sym != 'ALL':
         df = df[df['Symbol'] == sym]
-    if thresh != 'ALL':
-        df = df[df['Band_Val'] == thresh]
     if stasis and stasis > 0:
         df = df[df['Stasis'] >= stasis]
     if direction != 'ALL':
         df = df[df['Dir'] == direction]
-    if rr is not None and rr >= 0:
-        df = df[(df['RR_Val'].notna()) & (df['RR_Val'] >= rr)]
+    if fms_min is not None and fms_min >= 0:
+        df = df[df['FMS'] >= fms_min]
+    if tms_min is not None and tms_min >= 0:
+        df = df[df['TMS'] >= tms_min]
     if w52 != 'ALL':
-        ranges = {'0-20': (0, 20), '20-40': (20, 40), '40-60': (40, 60), '60-80': (60, 80), '80-100': (80, 100)}
+        ranges = {'0-20': (0, 20), '20-40': (20, 40), '40-60': (40, 60)}
         if w52 in ranges:
             lo, hi = ranges[w52]
             df = df[(df['52W_Val'] >= lo) & (df['52W_Val'] <= hi)]
-    if duration and duration > 0:
-        df = df[df['Dur_Val'] >= duration]
     
-    if sort == 'stasis':
-        df = df.sort_values(['Stasis', 'RR_Val'], ascending=[False, False])
-    elif sort == 'rr':
-        df = df.sort_values(['RR_Val', 'Stasis'], ascending=[False, False])
-    elif sort == 'duration':
-        df = df.sort_values(['Dur_Val', 'Stasis'], ascending=[False, False])
+    # Sorting
+    if sort == 'tms':
+        df = df.sort_values(['TMS', 'FMS'], ascending=[False, False])
+    elif sort == 'fms':
+        df = df.sort_values(['FMS', 'TMS'], ascending=[False, False])
+    elif sort == 'sms':
+        df = df.sort_values(['SMS', 'TMS'], ascending=[False, False])
+    elif sort == 'rev':
+        df = df.sort_values(['Rev5_Val', 'TMS'], ascending=[False, False])
+    elif sort == 'fcf':
+        df = df.sort_values(['FCF5_Val', 'TMS'], ascending=[False, False])
+    elif sort == 'stasis':
+        df = df.sort_values(['Stasis', 'TMS'], ascending=[False, False])
     elif sort == '52w':
-        df = df.sort_values(['52W_Val', 'Stasis'], ascending=[True, False], na_position='last')
+        df = df.sort_values(['52W_Val', 'TMS'], ascending=[True, False], na_position='last')
     
     df = df.head(rows)
     
-    drop_cols = ['Band_Val', 'Current_Val', 'Anchor_Val', 'TP_Val', 'SL_Val', 
-                 'RR_Val', '→TP_Val', '→SL_Val', 'Dur_Val', 'Chg_Val', '52W_Val', 'Is_Tradable']
+    drop_cols = ['Band_Val', 'Current_Val', 'RR_Val', 'Dur_Val', '52W_Val', 
+                 'Is_Tradable', 'Rev5_Val', 'FCF5_Val', 'Anchor']
     df = df.drop(columns=drop_cols, errors='ignore')
     
     return df.to_dict('records')
 
+
 # ============================================================================
-# INITIALIZATION - Runs when module is imported (including by Gunicorn)
+# INITIALIZATION
 # ============================================================================
 
 _initialized = False
 _init_lock = threading.Lock()
 
+
 def initialize_app():
-    """Initialize all data and start background threads."""
     global _initialized
     
     with _init_lock:
@@ -1287,26 +1840,25 @@ def initialize_app():
             return
         
         print("=" * 70)
-        print("  BEYOND PRICE AND TIME - INITIALIZING")
-        print("  © 2026 Truth Communications LLC. All Rights Reserved.")
+        print("  BEYOND PRICE AND TIME")
+        print("  WITH FUNDAMENTAL SLOPE MERIT SCORING")
+        print("  © 2026 Truth Communications LLC")
         print("=" * 70)
         
         print(f"\n🎯 Stocks: {len(config.symbols)}")
-        print(f"📏 Thresholds: {len(config.thresholds)}")
-        print(f"🔢 Bitstreams: {len(config.symbols) * len(config.thresholds)}")
         
         # Fetch 52-week data
         print("\n📅 FETCHING 52-WEEK DATA...")
         config.week52_data = fetch_52_week_data()
         
-        valid_52w = sum(1 for v in config.week52_data.values() if v.get('high') is not None)
-        print(f"📊 52-week data loaded for {valid_52w} symbols")
-        
         # Fetch volume data
-        print("\n📊 FETCHING VOLUME DATA...")
+        print("📊 FETCHING VOLUME DATA...")
         config.volumes = fetch_volume_data()
         
-        # Backfill historical data
+        # Fetch fundamental data and calculate slopes
+        fetch_all_fundamental_data()
+        
+        # Backfill historical price data
         manager.backfill()
         
         # Start price feed and manager
@@ -1314,27 +1866,27 @@ def initialize_app():
         manager.start()
         
         print("\n✅ Initialization complete!")
+        print(f"📊 Fundamental slopes calculated for {len(config.fundamental_slopes)} symbols")
         print("=" * 70)
         
         _initialized = True
 
-# Start initialization in background thread so Gunicorn doesn't timeout
+
 _init_thread = threading.Thread(target=initialize_app, daemon=True)
 _init_thread.start()
 
+
 # ============================================================================
-# MAIN (for local development only)
+# MAIN
 # ============================================================================
 
 if __name__ == '__main__':
     import os
     
-    # Wait for initialization to complete when running locally
     _init_thread.join()
     
     print("\n✅ Server: http://127.0.0.1:8050")
     
-    # Open browser
     threading.Thread(
         target=lambda: (time.sleep(2), webbrowser.open('http://127.0.0.1:8050')), 
         daemon=True
@@ -1342,4 +1894,3 @@ if __name__ == '__main__':
     
     port = int(os.environ.get('PORT', 8050))
     app.run(debug=False, host='0.0.0.0', port=port)
-
